@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  auth-api:
+    image: golang:1.16-alpine
+    restart: always
+    environment:
+      ACCESS_SECRET: "@!#$%@"
+      REFRESH_SECRET: "@!#$%@"
+      GIN_MODE: release
+      REDIS_DSN: redis:6379
+    volumes:
+      - .:/go/src/app
+    working_dir: /go/src/app
+    command: go run main.go
+    ports:
+      # map port 8080 on the host OS to the port defined in .env
+      - "8080:8080"
+    networks: 
+      - auth
+    depends_on:
+        - redis
+        - mongodb
+
+  mongodb:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./volumes/mongodb:/data/db
+    networks:
+      - auth
+
+  redis:
+    image: redis:alpine
+    ports: 
+      - "6379:6379"
+    networks: 
+      - auth
+
+networks: 
+  auth:
+    driver: bridge  
